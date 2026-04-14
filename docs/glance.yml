@@ -59,7 +59,7 @@ pages:
                 collapse-after: 7
                 cache: 2h
                 feeds:
-                  - url: http://localhost:8082/rss
+                  - url: http://szx-rss:8082/rss
                     title: SZX国内特价
       - size: small
         widgets:

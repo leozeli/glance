@@ -9,6 +9,7 @@ Requires proxy at http://127.0.0.1:7890 for Ctrip API access.
 """
 
 import json
+import os
 import sys
 import threading
 import time
@@ -21,7 +22,9 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 # --- Config ----------------------------------------------------------------
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8081
-PROXY = "http://127.0.0.1:7890"
+# Set HTTPS_PROXY env var to use a proxy (e.g. local dev with Clash).
+# Leave unset for direct access (e.g. overseas VPS).
+PROXY = os.environ.get("HTTPS_PROXY", os.environ.get("https_proxy", ""))
 CACHE_TTL = 7200  # seconds (2 hours)
 LOOK_AHEAD_DAYS = 90
 MAX_WORKERS = 12  # parallel route fetches
@@ -73,8 +76,11 @@ def _fetch_month_prices(dcity: str, acity: str, year: int, month: int) -> dict:
         f"&dcity={dcity}&acity={acity}"
         f"&departuretime={year}-{month:02d}"
     )
-    proxy_handler = urllib.request.ProxyHandler({"http": PROXY, "https": PROXY})
-    opener = urllib.request.build_opener(proxy_handler)
+    if PROXY:
+        proxy_handler = urllib.request.ProxyHandler({"http": PROXY, "https": PROXY})
+        opener = urllib.request.build_opener(proxy_handler)
+    else:
+        opener = urllib.request.build_opener()
     req = urllib.request.Request(url)
     req.add_header(
         "User-Agent",
