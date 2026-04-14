@@ -1,5 +1,5 @@
 pages:
-  - name: Home
+  - name: Start 
     # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
     # hide-desktop-navigation: true
     columns:
@@ -7,61 +7,66 @@ pages:
         widgets:
           - type: calendar
             first-day-of-week: monday
-
+          - type: clock
+          - type: server-stats
+            servers:
+              - type: local
+                name: Services
           - type: rss
-            limit: 10
-            collapse-after: 3
-            cache: 12h
+            style: vertical-list
+            collapse-after: 7
+            cache: 8h
             feeds:
-              - url: https://selfh.st/rss/
-                title: selfh.st
-                limit: 4
-              - url: https://ciechanow.ski/atom.xml
-              - url: https://www.joshwcomeau.com/rss.xml
-                title: Josh Comeau
-              - url: https://samwho.dev/rss.xml
-              - url: https://ishadeed.com/feed.xml
-                title: Ahmad Shadeed
-
-          - type: twitch-channels
-            channels:
-              - theprimeagen
-              - j_blow
-              - giantwaffle
-              - cohhcarnage
-              - christitustech
-              - EJ_SA
-
+              - url: https://fmhy.net/feed.rss
+                title: fmhy
       - size: full
         widgets:
-          - type: group
+          - type: search
+            search-engine: google
+          - type: split-column
             widgets:
               - type: hacker-news
               - type: lobsters
-
-          - type: videos
-            channels:
-              - UCXuqSBlHAE6Xw-yeJA0Tunw # Linus Tech Tips
-              - UCR-DXc1voovS8nhAvccRZhg # Jeff Geerling
-              - UCsBjURrPoezykLs9EqgamOA # Fireship
-              - UCBJycsmduvYEL83R_U4JriQ # Marques Brownlee
-              - UCHnyfMqiRRG1u-2MsSQLbXA # Veritasium
-
-          - type: group
+          - type: split-column
             widgets:
-              - type: reddit
-                subreddit: technology
-                show-thumbnails: true
-              - type: reddit
-                subreddit: selfhosted
-                show-thumbnails: true
-
+              - type: rss
+                style: vertical-list
+                collapse-after: 7
+                cache: 4h
+                feeds: 
+                  - url: https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml
+                    title: github trending
+              - type: rss
+                style: vertical-list
+                collapse-after: 7
+                cache: 4h
+                feeds:
+                  - url: http://172.18.0.2:1200/v2ex/topics/hot
+                    title: v2ex hot
+          - type: split-column
+            widgets:
+              - type: rss
+                title: Cheap Flights (HKG)
+                style: vertical-list
+                collapse-after: 7
+                cache: 2h
+                feeds:
+                  - url: https://www.secretflying.com/?s=hong+kong&feed=rss2
+                    title: SecretFlying
+              - type: rss
+                title: 深圳出发特价机票
+                style: vertical-list
+                collapse-after: 7
+                cache: 2h
+                feeds:
+                  - url: http://localhost:8082/rss
+                    title: SZX国内特价
       - size: small
         widgets:
           - type: weather
-            location: London, United Kingdom
+            location: ShenZhen, China
             units: metric # alternatively "imperial"
-            hour-format: 12h # alternatively "24h"
+            hour-format: 24h # alternatively "24h"
             # Optionally hide the location from being displayed in the widget
             # hide-location: true
 
@@ -78,28 +83,33 @@ pages:
               - symbol: MSFT
                 name: Microsoft
 
-          - type: releases
-            cache: 1d
-            # Without authentication the Github API allows for up to 60 requests per hour. You can create a
-            # read-only token from your Github account settings and use it here to increase the limit.
-            # token: ...
-            repositories:
-              - glanceapp/glance
-              - go-gitea/gitea
-              - immich-app/immich
-              - syncthing/syncthing
-
-  # Add more pages here:
-  # - name: Your page name
-  #   columns:
-  #     - size: small
-  #       widgets:
-  #         # Add widgets here
-
-  #     - size: full
-  #       widgets:
-  #         # Add widgets here
-
-  #     - size: small
-  #       widgets:
-  #         # Add widgets here
+                
+theme:
+  background-color: 100 20 10
+  primary-color: 40 90 40
+  contrast-multiplier: 1.1
+  disable-picker: false
+  presets:
+    gruvbox-dark:
+      background-color: 0 0 16
+      primary-color: 43 59 81
+      positive-color: 61 66 44
+      negative-color: 6 96 59
+    zebra:
+      light: true
+      background-color: 0 0 95
+      primary-color: 0 0 10
+      negative-color: 0 90 50
+    peachy:
+      light: true
+      background-color: 28 40 77
+      primary-color: 155 100 20
+      negative-color: 0 100 60
+      contrast-multiplier: 1.1
+      text-saturation-multiplier: 0.5
+    drcula:
+      background-color: 231 15 21
+      primary-color: 265 89 79
+      contrast-multiplier: 1.2
+      positive-color: 135 94 66
+      negative-color: 0 100 67
