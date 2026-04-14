@@ -1,0 +1,17 @@
+services:
+  glance:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docs/glance.yml:/app/config/glance.yml:ro
+    depends_on:
+      - szx-rss
+    restart: unless-stopped
+
+  szx-rss:
+    image: python:3.11-alpine
+    command: python3 /app/szx-flights-rss.py 8082
+    volumes:
+      - ./scripts/szx-flights-rss.py:/app/szx-flights-rss.py:ro
+    restart: unless-stopped
