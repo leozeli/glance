@@ -97,6 +97,7 @@ func serveApp(configPath string) error {
 	exitChannel := make(chan struct{})
 	hadValidConfigOnStartup := false
 	var stopServer func() error
+	var reloadFn func()
 
 	onChange := func(newContents []byte) {
 		if stopServer != nil {
@@ -129,6 +130,8 @@ func serveApp(configPath string) error {
 			hadValidConfigOnStartup = true
 		}
 
+		app.OnReload = reloadFn
+
 		if stopServer != nil {
 			if err := stopServer(); err != nil {
 				log.Printf("Error while trying to stop server: %v", err)
@@ -147,6 +150,15 @@ func serveApp(configPath string) error {
 
 	onErr := func(err error) {
 		log.Printf("Error watching config files: %v", err)
+	}
+
+	reloadFn = func() {
+		newContents, _, err := parseYAMLIncludes(configPath)
+		if err != nil {
+			log.Printf("Reload failed, error reading config: %v", err)
+			return
+		}
+		onChange(newContents)
 	}
 
 	configContents, configIncludes, err := parseYAMLIncludes(configPath)
