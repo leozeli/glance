@@ -42,6 +42,8 @@ type application struct {
 	usernameHashToUsername map[string]string
 	authAttemptsMu         sync.Mutex
 	failedAuthAttempts     map[string]*failedAuthAttempt
+
+	OnReload func()
 }
 
 func newApplication(c *config) (*application, error) {
@@ -449,6 +451,13 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
+	if a.OnReload != nil {
+		mux.HandleFunc("POST /api/reload", func(w http.ResponseWriter, _ *http.Request) {
+			go a.OnReload()
+			w.WriteHeader(http.StatusOK)
+		})
+	}
 
 	if a.RequiresAuth {
 		mux.HandleFunc("GET /login", a.handleLoginPageRequest)
