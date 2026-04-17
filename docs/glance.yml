@@ -25,21 +25,11 @@ pages:
             search-engine: google
           - type: split-column
             widgets:
-              - type: hacker-news
               - type: rss
                 style: vertical-list
                 collapse-after: 7
                 cache: 4h
                 feeds:
-                  - url: https://lobste.rs/rss
-                    title: Lobsters
-          - type: split-column
-            widgets:
-              - type: rss
-                style: vertical-list
-                collapse-after: 7
-                cache: 4h
-                feeds: 
                   - url: https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml
                     title: github trending
               - type: rss
@@ -69,12 +59,7 @@ pages:
                     title: SZX国内特价
       - size: small
         widgets:
-          - type: weather
-            location: ShenZhen, China
-            units: metric # alternatively "imperial"
-            hour-format: 24h # alternatively "24h"
-            # Optionally hide the location from being displayed in the widget
-            # hide-location: true
+          - type: hacker-news
 
 
                 
