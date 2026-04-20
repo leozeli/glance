@@ -23,7 +23,7 @@ services:
   wewe-rss:
     image: cooderl/wewe-rss-sqlite:latest
     ports:
-      - "127.0.0.1:4001:4000"
+      - "0.0.0.0:4001:4000"
     environment:
       - DATABASE_TYPE=sqlite
       - AUTH_CODE=${WEWE_AUTH_CODE}
