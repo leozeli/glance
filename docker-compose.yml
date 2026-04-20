@@ -20,6 +20,25 @@ services:
     networks:
       - 1panel-network
 
+  wewe-rss:
+    image: cooderl/wewe-rss-sqlite:latest
+    ports:
+      - "127.0.0.1:4001:4000"
+    environment:
+      - DATABASE_TYPE=sqlite
+      - AUTH_CODE=${WEWE_AUTH_CODE}
+      - SERVER_ORIGIN_URL=http://wewe-rss:4000
+      - FEED_MODE=fulltext
+      - CRON_EXPRESSION=35 5,17 * * *
+    volumes:
+      - wewe-rss-data:/app/data
+    restart: unless-stopped
+    networks:
+      - 1panel-network
+
+volumes:
+  wewe-rss-data:
+
 networks:
   1panel-network:
     external: true
