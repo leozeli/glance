@@ -29,14 +29,33 @@ const [datesEntranceLeft, datesEntranceRight] = directions(
 
 const undoEntrance = slideFade({ direction: "left", distance: "100%", duration: 300 });
 
+const holidayCache = new Map();
+const holidayLoading = new Set();
+
+async function loadHolidays(year) {
+    if (holidayCache.has(year) || holidayLoading.has(year)) return;
+    holidayLoading.add(year);
+    try {
+        const r = await fetch(`https://cdn.jsdelivr.net/gh/NateScarlet/holiday-cn@master/${year}.json`);
+        const { days } = await r.json();
+        holidayCache.set(year, new Map(days.map(d => [d.date, d])));
+    } catch {
+        holidayCache.set(year, new Map());
+    } finally {
+        holidayLoading.delete(year);
+    }
+}
+
 export default function(element) {
+    const cnHolidays = element.dataset.cnHolidays === "true";
     element.swapWith(Calendar(
-        Number(element.dataset.firstDayOfWeek ?? 1)
+        Number(element.dataset.firstDayOfWeek ?? 1),
+        cnHolidays
     ));
 }
 
 // TODO: when viewing the previous/next month, display the current date if it's within the spill-over days
-function Calendar(firstDay) {
+function Calendar(firstDay, cnHolidays) {
     let header, dates;
     let advanceTimeTicker;
     let now = new Date();
@@ -44,7 +63,14 @@ function Calendar(firstDay) {
 
     const update = (newDate) => {
         header.component.update(now, newDate);
-        dates.component.update(now, newDate);
+        const y = newDate.getFullYear();
+        const holidays = cnHolidays ? (holidayCache.get(y) ?? null) : null;
+        dates.component.update(now, newDate, holidays);
+        if (cnHolidays && !holidayCache.has(y)) {
+            loadHolidays(y).then(() => {
+                if (activeDate?.getFullYear() === y) update(activeDate);
+            });
+        }
         activeDate = newDate;
     };
 
@@ -130,12 +156,14 @@ function Header(nextClicked, prevClicked, undoClicked) {
 function Dates(firstDay) {
     let dates, lastRenderedDate;
 
-    const updateFullMonth = function(now, newDate) {
-        const firstWeekday = new Date(newDate.getFullYear(), newDate.getMonth(), 1).getDay();
+    const updateFullMonth = function(now, newDate, holidays) {
+        const year = newDate.getFullYear();
+        const month = newDate.getMonth();
+        const firstWeekday = new Date(year, month, 1).getDay();
         const previousMonthSpilloverDays = (firstWeekday - firstDay + 7) % 7 || 7;
-        const currentMonthDays = daysInMonth(newDate.getFullYear(), newDate.getMonth());
+        const currentMonthDays = daysInMonth(year, month);
         const nextMonthSpilloverDays = FULL_MONTH_SLOTS - (previousMonthSpilloverDays + currentMonthDays);
-        const previousMonthDays = daysInMonth(newDate.getFullYear(), newDate.getMonth() - 1)
+        const previousMonthDays = daysInMonth(year, month - 1)
         const isCurrentMonth = datesWithinSameMonth(now, newDate);
         const currentDate = now.getDate();
 
@@ -143,7 +171,7 @@ function Dates(firstDay) {
         let index = 0;
 
         for (let i = 0; i < FULL_MONTH_SLOTS; i++) {
-            children[i].clearClasses("calendar-spillover-date", "calendar-current-date");
+            children[i].clearClasses("calendar-spillover-date", "calendar-current-date", "calendar-cn-holiday", "calendar-cn-workday");
         }
 
         for (let i = 0; i < previousMonthSpilloverDays; i++, index++) {
@@ -153,8 +181,12 @@ function Dates(firstDay) {
         }
 
         for (let i = 1; i <= currentMonthDays; i++, index++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const holiday = holidays?.get(dateStr);
             children[index]
                 .classesIf(isCurrentMonth && i === currentDate, "calendar-current-date")
+                .classesIf(!!holiday && holiday.isOffDay, "calendar-cn-holiday")
+                .classesIf(!!holiday && !holiday.isOffDay, "calendar-cn-workday")
                 .text(i);
         }
 
@@ -165,15 +197,15 @@ function Dates(firstDay) {
         lastRenderedDate = newDate;
     };
 
-    const update = function(now, newDate) {
+    const update = function(now, newDate, holidays) {
         if (lastRenderedDate === undefined || datesWithinSameMonth(newDate, lastRenderedDate)) {
-            updateFullMonth(now, newDate);
+            updateFullMonth(now, newDate, holidays);
             return;
         }
 
         const next = newDate > lastRenderedDate;
         dates.animateUpdate(
-            () => updateFullMonth(now, newDate),
+            () => updateFullMonth(now, newDate, holidays),
             next ? datesExitLeft : datesExitRight,
             next ? datesEntranceRight : datesEntranceLeft,
         );

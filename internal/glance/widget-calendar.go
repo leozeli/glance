@@ -19,10 +19,11 @@ var calendarWeekdaysToInt = map[string]time.Weekday{
 }
 
 type calendarWidget struct {
-	widgetBase     `yaml:",inline"`
-	FirstDayOfWeek string        `yaml:"first-day-of-week"`
-	FirstDay       int           `yaml:"-"`
-	cachedHTML     template.HTML `yaml:"-"`
+	widgetBase          `yaml:",inline"`
+	FirstDayOfWeek      string        `yaml:"first-day-of-week"`
+	FirstDay            int           `yaml:"-"`
+	ShowChineseHolidays bool          `yaml:"show-chinese-holidays"`
+	cachedHTML          template.HTML `yaml:"-"`
 }
 
 func (widget *calendarWidget) initialize() error {

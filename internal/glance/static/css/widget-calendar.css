@@ -69,3 +69,17 @@
     height: 2rem;
     margin-left: 0.7rem;
 }
+
+.calendar-cn-holiday {
+    color: var(--color-negative);
+}
+
+.calendar-cn-workday::after {
+    content: '班';
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    font-size: 0.42rem;
+    color: var(--color-positive);
+    line-height: 1;
+}

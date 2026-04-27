@@ -7,11 +7,8 @@ pages:
         widgets:
           - type: calendar
             first-day-of-week: monday
+            show-chinese-holidays: true
           - type: clock
-          - type: server-stats
-            servers:
-              - type: local
-                name: Services
           - type: rss
             style: vertical-list
             collapse-after: 7
