@@ -24,33 +24,36 @@ PROXY = os.environ.get("HTTPS_PROXY", os.environ.get("https_proxy", ""))
 CACHE_TTL = 7200  # seconds (2 hours)
 LOOK_AHEAD_DAYS = 90
 MIN_STAY = 3    # minimum nights for round-trip
-MAX_STAY = 14   # maximum nights to search for return
-MAX_WORKERS = 8  # parallel route fetches (each route does 2 API calls now)
+MAX_STAY = 60   # search up to 60 nights (cheap legs rarely align within 2 weeks)
+MAX_WORKERS = 8
 
-# Routes: (iata_code, display_name, rt_threshold_cny)
-# Round-trip thresholds ≈ 1.8x one-way (round-trips are rarely exactly 2x)
+# Routes: (iata_code, display_name)
+# No threshold — always show cheapest combo found, let prices speak for themselves
 ROUTES = [
-    ("SHA", "上海",       650),
-    ("BJS", "北京",       860),
-    ("CTU", "成都",       770),
-    ("CKG", "重庆",       500),
-    ("KMG", "昆明",       830),
-    ("SYX", "三亚",       770),
-    ("URC", "乌鲁木齐",  1150),
-    ("TSN", "天津",       830),
-    ("HGH", "杭州",       580),
-    ("WUH", "武汉",       590),
-    ("CSX", "长沙",       560),
-    ("NKG", "南京",       650),
-    ("NNG", "南宁",       580),
-    ("HAK", "海口",       680),
-    ("XMN", "厦门",       580),
-    ("XIY", "西安",       740),
-    ("DLC", "大连",       810),
-    ("TAO", "青岛",       770),
-    ("LJG", "丽江",       830),
-    ("TNA", "济南",       770),
+    ("SHA", "上海"),
+    ("BJS", "北京"),
+    ("CTU", "成都"),
+    ("CKG", "重庆"),
+    ("KMG", "昆明"),
+    ("SYX", "三亚"),
+    ("URC", "乌鲁木齐"),
+    ("TSN", "天津"),
+    ("HGH", "杭州"),
+    ("WUH", "武汉"),
+    ("CSX", "长沙"),
+    ("NKG", "南京"),
+    ("NNG", "南宁"),
+    ("HAK", "海口"),
+    ("XMN", "厦门"),
+    ("XIY", "西安"),
+    ("DLC", "大连"),
+    ("TAO", "青岛"),
+    ("LJG", "丽江"),
+    ("TNA", "济南"),
 ]
+
+# Sanity cap: skip absurdly expensive routes (e.g. data errors)
+RT_PRICE_CAP = 3000
 
 CTRIP_API = "https://flights.ctrip.com/itinerary/api/12808/lowestPrice"
 
@@ -114,17 +117,24 @@ def _get_all_prices(dcity: str, acity: str, extra_days: int = 0) -> dict:
     return all_prices
 
 
-def fetch_cheap_roundtrips(dest_code: str, rt_threshold: int) -> list:
-    """Return sorted list of (dep_date, ret_date, dep_price, ret_price, total)."""
+def fetch_cheap_roundtrips(dest_code: str) -> list:
+    """Return top-5 cheapest (dep_date, ret_date, dep_price, ret_price, total) combos."""
     today = date.today()
     dep_cutoff = today + timedelta(days=LOOK_AHEAD_DAYS)
 
-    # Fetch both directions concurrently
+    # Fetch both directions concurrently; return window extends MAX_STAY days further
     with ThreadPoolExecutor(max_workers=2) as pool:
         f_out = pool.submit(_get_all_prices, "SZX", dest_code, 0)
         f_ret = pool.submit(_get_all_prices, dest_code, "SZX", MAX_STAY)
         outbound_prices = f_out.result()
         return_prices = f_ret.result()
+
+    # Pre-sort return prices by date for fast range lookup
+    ret_by_date = {
+        datetime.strptime(ds, "%Y%m%d").date(): p
+        for ds, p in return_prices.items()
+        if len(ds) == 8
+    }
 
     combos = []
     for dep_str, dep_price in outbound_prices.items():
@@ -138,10 +148,9 @@ def fetch_cheap_roundtrips(dest_code: str, rt_threshold: int) -> list:
         # Find cheapest return within the stay window
         best_ret_date = None
         best_ret_price = 999999
-        for stay in range(MIN_STAY, MAX_STAY + 1):
-            ret_date = dep_date + timedelta(days=stay)
-            ret_price = return_prices.get(ret_date.strftime("%Y%m%d"))
-            if ret_price is not None and ret_price < best_ret_price:
+        for ret_date, ret_price in ret_by_date.items():
+            gap = (ret_date - dep_date).days
+            if MIN_STAY <= gap <= MAX_STAY and ret_price < best_ret_price:
                 best_ret_date = ret_date
                 best_ret_price = ret_price
 
@@ -149,7 +158,7 @@ def fetch_cheap_roundtrips(dest_code: str, rt_threshold: int) -> list:
             continue
 
         total = dep_price + best_ret_price
-        if total <= rt_threshold:
+        if total <= RT_PRICE_CAP:
             combos.append((dep_date, best_ret_date, dep_price, best_ret_price, total))
 
     combos.sort(key=lambda x: x[4])
@@ -169,16 +178,16 @@ def build_rss() -> str:
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         futures = {
-            pool.submit(fetch_cheap_roundtrips, code, threshold): (code, name, threshold)
-            for code, name, threshold in ROUTES
+            pool.submit(fetch_cheap_roundtrips, code): (code, name)
+            for code, name in ROUTES
         }
         for future in as_completed(futures):
-            code, name, threshold = futures[future]
+            code, name = futures[future]
             combos = future.result()
             if combos:
-                results.append((code, name, threshold, combos))
+                results.append((code, name, combos))
 
-    results.sort(key=lambda r: r[3][0][4])  # sort by best total price
+    results.sort(key=lambda r: r[2][0][4])  # sort by best total price
 
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -190,7 +199,7 @@ def build_rss() -> str:
         f"<lastBuildDate>{_rss_date(now)}</lastBuildDate>",
     ]
 
-    for code, name, threshold, combos in results:
+    for code, name, combos in results:
         dep_date, ret_date, dep_price, ret_price, total = combos[0]
         nights = (ret_date - dep_date).days
         ctrip_url = (
