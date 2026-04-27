@@ -74,12 +74,25 @@
     color: var(--color-negative);
 }
 
+.calendar-cn-holiday::before {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--color-negative);
+}
+
 .calendar-cn-workday::after {
     content: '班';
     position: absolute;
-    bottom: 1px;
+    bottom: 0;
     right: 1px;
-    font-size: 0.42rem;
+    font-size: 0.6rem;
+    font-weight: 700;
     color: var(--color-positive);
     line-height: 1;
 }
