@@ -50,13 +50,13 @@ pages:
                   - url: https://www.secretflying.com/?s=hong+kong&feed=rss2
                     title: SecretFlying
               - type: rss
-                title: 深圳出发特价机票
+                title: 深圳出发特价往返机票
                 style: vertical-list
                 collapse-after: 7
                 cache: 2h
                 feeds:
                   - url: http://szx-rss:8082/rss
-                    title: SZX国内特价
+                    title: SZX往返特价
       - size: small
         widgets:
           - type: hacker-news
