@@ -228,12 +228,12 @@ def build_rss() -> str:
 
 
 def get_cached_rss() -> str:
+    global _cache_data, _cache_time
     with _cache_lock:
         if _cache_valid():
             return _cache_data  # type: ignore[return-value]
     rss = build_rss()
     with _cache_lock:
-        global _cache_data, _cache_time
         _cache_data = rss
         _cache_time = time.time()
     return rss
