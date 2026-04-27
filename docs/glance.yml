@@ -19,6 +19,16 @@ pages:
             feeds:
               - url: https://fmhy.net/feed.rss
                 title: fmhy
+          - type: rss
+            title: 科技热点
+            style: vertical-list
+            collapse-after: 7
+            cache: 10m
+            feeds:
+              - url: http://newsnow-rss:8083/rss?id=36kr-renqi
+                title: 36氪
+              - url: http://newsnow-rss:8083/rss?id=juejin
+                title: 掘金
       - size: full
         widgets:
           - type: search
@@ -60,6 +70,26 @@ pages:
       - size: small
         widgets:
           - type: hacker-news
+          - type: rss
+            title: 财经快讯
+            style: vertical-list
+            collapse-after: 7
+            cache: 10m
+            feeds:
+              - url: http://newsnow-rss:8083/rss?id=wallstreetcn-quick
+                title: 华尔街见闻
+              - url: http://newsnow-rss:8083/rss?id=cls-telegraph
+                title: 财联社
+          - type: rss
+            title: 国际资讯
+            style: vertical-list
+            collapse-after: 7
+            cache: 10m
+            feeds:
+              - url: http://newsnow-rss:8083/rss?id=zaobao
+                title: 早报
+              - url: http://newsnow-rss:8083/rss?id=cankaoxiaoxi
+                title: 参考消息
 
 
                 

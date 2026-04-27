@@ -20,6 +20,33 @@ services:
     networks:
       - 1panel-network
 
+  newsnow:
+    image: ghcr.io/ourongxing/newsnow:latest
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4444
+      - NODE_ENV=production
+      - INIT_TABLE=true
+      - ENABLE_CACHE=true
+    volumes:
+      - newsnow-data:/usr/app/.data
+    restart: unless-stopped
+    networks:
+      - 1panel-network
+
+  newsnow-rss:
+    image: python:3.11-alpine
+    command: python3 /app/newsnow-rss.py 8083
+    environment:
+      - NEWSNOW_URL=http://newsnow:4444
+    volumes:
+      - ./scripts/newsnow-rss.py:/app/newsnow-rss.py:ro
+    depends_on:
+      - newsnow
+    restart: unless-stopped
+    networks:
+      - 1panel-network
+
   wewe-rss:
     image: ghcr.io/leozeli/wewe-rss-sqlite:latest
     ports:
@@ -38,6 +65,7 @@ services:
 
 volumes:
   wewe-rss-data:
+  newsnow-data:
 
 networks:
   1panel-network:
