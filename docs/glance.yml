@@ -25,10 +25,10 @@ pages:
             collapse-after: 7
             cache: 10m
             feeds:
-              - url: http://newsnow-rss:8083/rss?id=36kr-renqi
-                title: 36氪
-              - url: http://newsnow-rss:8083/rss?id=juejin
-                title: 掘金
+              - url: http://newsnow-rss:8083/rss?id=ithome
+                title: IT之家
+              - url: http://newsnow-rss:8083/rss?id=github-trending-today
+                title: GitHub
       - size: full
         widgets:
           - type: search
@@ -87,7 +87,7 @@ pages:
             cache: 10m
             feeds:
               - url: http://newsnow-rss:8083/rss?id=zaobao
-                title: 早报
+                title: 联合早报
               - url: http://newsnow-rss:8083/rss?id=cankaoxiaoxi
                 title: 参考消息
 
